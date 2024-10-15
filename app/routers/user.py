@@ -1,6 +1,6 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, status, HTTPException, Query
-from app.database import get_db_sesion
+from app.core.database import get_db_sesion
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.schemas.user import UserSchema, UserCreateSchema

@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from .database import test_db_connection
+from .core.database import test_db_connection
 
 from app.routers.user import user_router
 
