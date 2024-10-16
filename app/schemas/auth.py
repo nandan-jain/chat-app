@@ -5,7 +5,6 @@ class RegisterSchema(BaseModel):
     email: str
     phone_number: str
     password: str
-    role: str = "customer"
 
 
 class LoginSchema(BaseModel):

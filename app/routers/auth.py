@@ -25,8 +25,12 @@ def register(user_details: RegisterSchema, session: Session = Depends(get_db_ses
         # Return a generic error message for either email or phone number conflict
         raise HTTPException(status_code=400, detail="Email or phone number already exists.")
 
-    user_details.password = get_password_hash(user_details.password)
-    db_obj = User(**user_details.model_dump())
+    db_obj = User(
+        email = user_details.email,
+        phone_number = user_details.phone_number,
+        hashed_password = get_password_hash(user_details.password),
+        role = "customer"
+    )
     session.add(db_obj)
     session.commit()
     session.refresh(db_obj)
@@ -42,7 +46,7 @@ def login(user_details: LoginSchema, session: Session = Depends(get_db_sesion))-
         )).first()
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-    if not verify_password(user_details.password, user.password):
+    if not verify_password(user_details.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(access_token=create_access_token(user.id, expires_delta=access_token_expires))
