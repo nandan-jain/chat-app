@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     #     extra="ignore",
     # )
     # API_V1_STR: str = "/api/v1"
+    APP_URL: str = "http://localhost:8000"
     SECRET_KEY: str = "changethis"
     ALGORITHM: str = "HS256"
     # 60 minutes * 24 hours * 8 days = 8 days

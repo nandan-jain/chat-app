@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 
@@ -52,4 +53,13 @@ def authenticate(*, session: Session, user_details: LoginSchema) -> User | None:
     user = get_user_by_identifier(session=session, identifier=user_details.identifier)
     if not user or not verify_password(user_details.password, user.hashed_password):
         return None
+    return user
+
+
+def verify_user_token(session: Session, token: str) -> Optional[User]:
+    user = session.query(User).filter(User.verification_token == token).first()
+    if user and not user.is_verified:
+        user.is_verified = True
+        user.verification_token = None
+        session.commit()
     return user

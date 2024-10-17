@@ -6,9 +6,8 @@ from app.core.security import create_access_token
 
 from app.schemas.auth import RegisterSchema, LoginSchema, Token
 from app.core.config import settings
-from app.crud.auth import get_user_by_email_or_phone, create_user, authenticate
+from app.crud.auth import get_user_by_email_or_phone, create_user, authenticate, verify_user_token
 
-from sqlalchemy import or_
 
 auth_router = APIRouter()
 
@@ -21,7 +20,7 @@ def register(user_details: RegisterSchema, session: Session = Depends(get_db_ses
         raise HTTPException(status_code=400, detail="Email or phone number already exists.")
 
     user = create_user(session=session, user_details=user_details)
-    return {"message": "User created successfully"}
+    return {"message": "User created successfully", "verification_link": f"{settings.APP_URL}/verify?token={user.verification_token}"}
 
 
 @auth_router.post("/login")
@@ -31,6 +30,18 @@ def login(user_details: LoginSchema, session: Session = Depends(get_db_sesion))-
         raise HTTPException(status_code=400, detail="Invalid Credentials")
     elif not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
+    elif not user.is_verified:
+        raise HTTPException(status_code=400, detail="User not verified")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(access_token=create_access_token(user.id, expires_delta=access_token_expires))
+
+
+@auth_router.get("/verify")
+def verify_user(token: str = Query(...), session: Session = Depends(get_db_sesion)):
+    user = verify_user_token(session=session, token=token)
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid verification token")
+    
+    return {"message": "User verified successfully"}
 
