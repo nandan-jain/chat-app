@@ -1,4 +1,5 @@
 from typing import Optional
+import uuid
 from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 
@@ -63,3 +64,18 @@ def verify_user_token(session: Session, token: str) -> Optional[User]:
         user.verification_token = None
         session.commit()
     return user
+
+
+def verify_reset_password_token(session: Session, token: str) -> Optional[User]:
+    user = session.query(User).filter(User.reset_password_token == token).first()
+    if user and user.is_active:
+        user.reset_password_token = None
+        session.commit()
+        return user
+    return None
+
+
+def generate_reset_password_token(session: Session, user: User) -> str:
+    user.reset_password_token = uuid.uuid4()
+    session.commit()
+    return user.reset_password_token

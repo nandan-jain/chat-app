@@ -1,15 +1,17 @@
 from datetime import timedelta
-from fastapi import APIRouter, Depends, status, HTTPException, Query
+import uuid
+from fastapi import APIRouter, Body, Depends, status, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db_sesion
-from app.core.security import create_access_token
+from app.core.security import create_access_token, get_password_hash
 
-from app.schemas.auth import RegisterSchema, LoginSchema, Token
+from app.schemas.auth import RegisterSchema, LoginSchema, ResetPasswordSchema, Token, ForgotPasswordSchema
 from app.core.config import settings
-from app.crud.auth import get_user_by_email_or_phone, create_user, authenticate, verify_user_token
+from app.crud.auth import get_user_by_email_or_phone, create_user, authenticate, get_user_by_identifier, verify_reset_password_token, verify_user_token, generate_reset_password_token
 
 
 auth_router = APIRouter()
+
 
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user_details: RegisterSchema, session: Session = Depends(get_db_sesion)):
@@ -44,4 +46,28 @@ def verify_user(token: str = Query(...), session: Session = Depends(get_db_sesio
         raise HTTPException(status_code=400, detail="Invalid verification token")
     
     return {"message": "User verified successfully"}
+
+
+@auth_router.post("/forgot-password")
+def forgot_password(user_details: ForgotPasswordSchema, session: Session = Depends(get_db_sesion)):
+    user = get_user_by_identifier(session=session, identifier=user_details.identifier)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid email or phone number")
+    
+    reset_password_token = generate_reset_password_token(session=session, user=user)
+    return {"message": "Password reset email sent successfully", "reset_link": f"{settings.FRONTEND_HOST}/reset-password?token={reset_password_token}"}
+
+
+@auth_router.post("/reset-password")
+def reset_password(
+    token: str = Query(...),
+    session: Session = Depends(get_db_sesion),
+    password: ResetPasswordSchema = Body(...)
+):
+    user = verify_reset_password_token(session=session, token=token)
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid reset password token")
+    user.hashed_password = get_password_hash(password.password)
+    session.commit()
+    return {"message": "Password reset successfully"}
 

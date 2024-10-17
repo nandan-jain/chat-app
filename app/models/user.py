@@ -15,6 +15,7 @@ class User(Base):
     role = Column(String, nullable=False)  # 'merchant' or 'customer'
 
     verification_token = Column(UUID(as_uuid=True),default=uuid.uuid4)
+    reset_password_token = Column(UUID(as_uuid=True),default=uuid.uuid4)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
     is_superuser = Column(Boolean, default=False)

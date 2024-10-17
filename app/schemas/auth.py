@@ -1,35 +1,13 @@
 from pydantic import BaseModel, field_validator, ValidationError
 import re
-
+from app.schemas.validators import validate_password
 
 class RegisterSchema(BaseModel):
     email: str
     phone_number: str
     password: str
 
-    @field_validator('password')
-    def validate_password(cls, value):
-        # Check for minimum length
-        if len(value) < 8:
-            raise ValueError('Password must be at least 8 characters long')
-
-        # Check for at least one uppercase letter
-        if not re.search(r'[A-Z]', value):
-            raise ValueError('Password must contain at least one uppercase letter')
-
-        # Check for at least one lowercase letter
-        if not re.search(r'[a-z]', value):
-            raise ValueError('Password must contain at least one lowercase letter')
-
-        # Check for at least one digit
-        if not re.search(r'[0-9]', value):
-            raise ValueError('Password must contain at least one digit')
-
-        # Check for at least one special character
-        if not re.search(r'[\W_]', value):
-            raise ValueError('Password must contain at least one special character')
-
-        return value
+    _validate_password = field_validator('password')(validate_password)
 
     @field_validator('phone_number')
     def validate_phone_number(cls, value):
@@ -48,3 +26,12 @@ class LoginSchema(BaseModel):
 class Token(BaseModel):
     access_token: str
 
+
+class ForgotPasswordSchema(BaseModel):
+    identifier: str
+
+
+class ResetPasswordSchema(BaseModel):
+    password: str
+
+    _validate_password = field_validator('password')(validate_password)
