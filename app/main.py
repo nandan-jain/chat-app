@@ -7,7 +7,7 @@ from app.routers.auth import auth_router
 test_db_connection()
 app = FastAPI()
 app.include_router(user_router)
-app.include_router(auth_router)
+app.include_router(auth_router, tags=["auth"])
 
 
 @app.get("/")
