@@ -1,6 +1,14 @@
+from uuid import UUID
 from pydantic import BaseModel, field_validator, ValidationError
 import re
 from app.schemas.validators import validate_password
+
+
+class UserSchema(BaseModel):
+    id: UUID
+    email: str
+    phone_number: str
+    is_active: bool
 
 class RegisterSchema(BaseModel):
     email: str
